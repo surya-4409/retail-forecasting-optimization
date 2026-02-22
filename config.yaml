@@ -4,10 +4,12 @@
 
 paths:
   data_dir: "data"
-  model_dir: "models" # We will use this for MLOps versioning
+  model_dir: "models" 
 
 features:
   target: "imputed_sales"
+  lags: [1, 7, 14, 28]
+  rolling_windows: [7, 14, 28]
   predictors:
     - "base_price"
     - "is_promo"
@@ -51,3 +53,8 @@ model_params:
 validation:
   n_splits: 3
   test_length_days: 30
+
+inventory:
+  lead_time_days: 3
+  holding_cost_annual_rate: 0.2
+  stockout_penalty_per_unit: 15
