@@ -1,0 +1,6 @@
+store_id,store_type,location_tier
+S001,Express,Tier 1
+S002,Flagship,Tier 3
+S003,Express,Tier 2
+S004,Express,Tier 3
+S005,Flagship,Tier 3

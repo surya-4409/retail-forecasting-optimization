@@ -1,0 +1,10 @@
+setup:
+  - pip install -r requirements.txt
+
+pipeline:
+  - python src/data_generation.py
+  - jupyter nbconvert --to notebook --execute notebooks/01_exploratory_data_analysis.ipynb
+  - jupyter nbconvert --to notebook --execute notebooks/02_model_training_and_evaluation.ipynb
+
+dashboard:
+  - streamlit run dashboard/app.py
