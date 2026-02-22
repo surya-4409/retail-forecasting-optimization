@@ -1,0 +1,53 @@
+# ==========================================
+# Retail Forecasting Pipeline Configuration
+# ==========================================
+
+paths:
+  data_dir: "data"
+  model_dir: "models" # We will use this for MLOps versioning
+
+features:
+  target: "imputed_sales"
+  predictors:
+    - "base_price"
+    - "is_promo"
+    - "discount_depth"
+    - "day_of_week"
+    - "quarter"
+    - "month"
+    - "year"
+    - "day_of_year"
+    - "is_weekend"
+    - "is_holiday"
+    - "lag_1"
+    - "lag_7"
+    - "lag_14"
+    - "lag_28"
+    - "rolling_mean_7"
+    - "rolling_std_7"
+    - "rolling_mean_14"
+    - "rolling_std_14"
+    - "rolling_mean_28"
+    - "rolling_std_28"
+    - "store_id_encoded"
+    - "product_id_encoded"
+    - "category_encoded"
+    - "store_type_encoded"
+    - "location_tier_encoded"
+    - "demand_type_encoded"
+
+model_params:
+  xgboost:
+    n_estimators: 150
+    learning_rate: 0.05
+    max_depth: 6
+    random_state: 42
+  exponential_smoothing:
+    seasonal_periods: 7
+  ensemble:
+    weight_xgb: 0.5
+    weight_es: 0.5
+
+validation:
+  n_splits: 3
+  test_length_days: 30
