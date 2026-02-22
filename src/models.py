@@ -88,7 +88,8 @@ class ForecastingModels:
         """MLOps Best Practice: Model Versioning & Artifact Storage"""
         if self.xgb_model is not None:
             save_path = f"../{self.model_dir}/xgb_model_{version}.json"
-            self.xgb_model.save_model(save_path)
+            # FIX: Extract the core booster to bypass the scikit-learn wrapper bug
+            self.xgb_model.get_booster().save_model(save_path)
             logging.info(f"Model version {version} saved successfully to {save_path}")
         else:
             logging.warning("No model found to save.")
