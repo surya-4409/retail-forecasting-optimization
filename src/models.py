@@ -2,12 +2,18 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.model_selection import TimeSeriesSplit
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+import warnings
+
+# Suppress statsmodels warnings for clean output
+warnings.filterwarnings("ignore", category=UserWarning, module="statsmodels")
+warnings.filterwarnings("ignore", category=FutureWarning, module="statsmodels")
 
 class ForecastingModels:
     def __init__(self):
         self.xgb_model = None
-        # These are the numerical and encoded categorical features we created
+        self.residual_std = 0 # To store uncertainty for prediction intervals
         self.features = [
             'base_price', 'is_promo', 'discount_depth', 'day_of_week', 'quarter', 
             'month', 'year', 'day_of_year', 'is_weekend', 'is_holiday', 'lag_1', 
@@ -18,14 +24,25 @@ class ForecastingModels:
         ]
         self.target = 'imputed_sales'
 
-    def chronological_split(self, df, split_date):
-        """Splits data chronologically to simulate real-world forecasting."""
-        train = df[df['date'] < split_date].copy()
-        test = df[df['date'] >= split_date].copy()
-        return train, test
+    def walk_forward_split(self, df, n_splits=3):
+        """Generates train/test splits for robust Time-Series Cross-Validation."""
+        # Get unique sorted dates
+        dates = np.sort(df['date'].unique())
+        tscv = TimeSeriesSplit(n_splits=n_splits)
+        
+        splits = []
+        for train_idx, test_idx in tscv.split(dates):
+            train_dates = dates[train_idx]
+            test_dates = dates[test_idx]
+            
+            train_df = df[df['date'].isin(train_dates)].copy()
+            test_df = df[df['date'].isin(test_dates)].copy()
+            splits.append((train_df, test_df))
+            
+        return splits
 
     def train_xgboost(self, train_df):
-        """Trains the global XGBoost model on all data."""
+        """Trains XGBoost and calculates training residuals for uncertainty intervals."""
         X_train = train_df[self.features]
         y_train = train_df[self.target]
         
@@ -37,28 +54,65 @@ class ForecastingModels:
             objective='reg:squarederror'
         )
         self.xgb_model.fit(X_train, y_train)
+        
+        # Calculate residuals on training data to quantify uncertainty
+        train_preds = self.xgb_model.predict(X_train)
+        self.residual_std = np.std(y_train - train_preds)
+        
         return self.xgb_model
 
-    def predict_xgboost(self, test_df):
-        """Generates ML predictions and calculates prediction intervals based on residual std."""
+    def predict_xgboost(self, test_df, confidence_level=1.96):
+        """Generates point predictions and prediction intervals."""
         X_test = test_df[self.features]
         preds = self.xgb_model.predict(X_test)
         preds = np.maximum(preds, 0) # Sales can't be negative
-        return preds
+        
+        # 95% Confidence Interval bounds based on residual std
+        lower_bound = np.maximum(preds - (confidence_level * self.residual_std), 0)
+        upper_bound = preds + (confidence_level * self.residual_std)
+        
+        return preds, lower_bound, upper_bound
 
-    def train_predict_expsmoothing(self, train_series, test_steps, seasonal_periods=7):
-        """Statistical Baseline: Exponential Smoothing for a single series."""
-        # Add small constant to avoid division by zero errors in statsmodels
-        model = ExponentialSmoothing(
-            train_series + 0.001, 
-            trend='add', 
-            seasonal='add', 
-            seasonal_periods=seasonal_periods,
-            initialization_method="estimated"
-        )
-        fit_model = model.fit()
-        preds = fit_model.forecast(test_steps)
-        return np.maximum(preds.values, 0)
+    def croston_forecast(self, ts, test_steps):
+        """Implementation of Croston's method for Intermittent demand."""
+        ts_array = np.array(ts)
+        non_zero_idx = np.where(ts_array > 0)[0]
+        
+        if len(non_zero_idx) == 0:
+            return np.zeros(test_steps)
+            
+        demands = ts_array[non_zero_idx]
+        intervals = np.diff(np.insert(non_zero_idx, 0, -1))
+        
+        # Average demand size and average interval between demands
+        mean_demand = np.mean(demands)
+        mean_interval = np.mean(intervals)
+        
+        forecast = mean_demand / mean_interval if mean_interval > 0 else 0
+        return np.full(test_steps, forecast)
+
+    def train_predict_statistical(self, train_series, test_steps, demand_type, seasonal_periods=7):
+        """Routes to the correct statistical baseline based on product segmentation."""
+        if demand_type == 'Intermittent':
+            # Use Croston's for sparse data
+            preds = self.croston_forecast(train_series, test_steps)
+        else:
+            # Use Exponential Smoothing for Fast-Moving and Seasonal
+            try:
+                model = ExponentialSmoothing(
+                    train_series + 0.001, 
+                    trend='add', 
+                    seasonal='add', 
+                    seasonal_periods=seasonal_periods,
+                    initialization_method="estimated"
+                )
+                fit_model = model.fit()
+                preds = fit_model.forecast(test_steps).values
+            except:
+                # Fallback to simple mean if statsmodels fails to converge
+                preds = np.full(test_steps, train_series.mean())
+                
+        return np.maximum(preds, 0)
 
     def calculate_metrics(self, y_true, y_pred):
         """Calculates required business metrics."""
