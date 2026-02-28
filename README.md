@@ -1,113 +1,75 @@
 
 # 📦 Retail Demand Forecasting & Inventory Optimization Pipeline
 
-**Developer:** Surya (Roll No: 23MH1A4409)  
-**Role:** Data Scientist  
+**Developer:** Surya (Roll No: 23MH1A4409) | **Role:** Data Scientist  
+**🎥 Video Walkthrough:** [INSERT YOUR YOUTUBE/DRIVE LINK HERE]  
+**🌐 Live Dashboard:** [INSERT YOUR STREAMLIT LINK HERE]  
 
 ---
 
-## 🎯 Project Overview
-This repository contains a production-grade, end-to-end machine learning pipeline designed to solve a critical retail operations challenge: balancing product availability with inventory holding costs. 
+## 🎯 The Task: Project Overview
+Retail margins are constantly eroded by two opposing inventory failures: **stockouts** (which cause immediate revenue loss and customer churn) and **overstocking** (which drives up holding costs and markdowns). 
 
-The system predicts daily product-store demand and mathematically optimizes safety stock and reorder points. By transitioning from reactive purchasing to data-driven procurement, this tool aims to minimize capital tied up in excess inventory while drastically reducing stockout events for high-value retail products.
-
-## 🧠 Methodology & Analytical Rigor
-1. **Data Engineering & Integration:** Integrated multiple synthetic data sources (sales, products, stores, promotions). Implemented intelligent linear interpolation to handle historical stockouts, ensuring the model learns true baseline demand rather than zero-sales anomalies.
-2. **Feature Engineering:** Developed a modular pipeline (`src/features.py`) extracting calendar seasonality, moving averages, volatility (rolling standard deviation), and temporal lag features.
-3. **Forecasting (Ensemble Model):** Built a hybrid forecasting engine:
-   * **XGBoost:** A global machine learning model to capture non-linear relationships (promotional lifts, weekend spikes, pricing elasticity).
-   * **Exponential Smoothing:** A local statistical baseline to capture strict, item-specific temporal seasonality.
-4. **Inventory Optimization:** Utilized the Newsvendor framework to calculate the Critical Ratio based on holding costs and stockout penalties, dynamically generating **Recommended Order Quantities (ROQ)** and **Safety Stocks** for every item.
-
-## 📊 Key Results
-* **Fast-Moving Products:** The ensemble model achieved a Mean Absolute Percentage Error (MAPE) of **12.1%**, successfully surpassing the project target requirement of <20%.
-* **Actionable Output:** Successfully deployed an interactive Streamlit dashboard allowing stakeholders to visualize the 60-day forward-looking Reorder Point (ROP) dynamic thresholds.
+**The Objective:** Design and deploy an end-to-end, production-grade Machine Learning pipeline that predicts SKU-level demand and mathematically optimizes order quantities to minimize holding costs while strictly constraining stockout risk.
 
 ---
 
-## 📂 Repository Structure
+## 🧠 Way of Execution: The Methodology
+To achieve a senior-level data science solution, this project was executed in five distinct phases, strictly adhering to MLOps and Software Engineering best practices:
+
+### 1. Robust Data Engineering & Validation
+* **Configuration Management:** All hyperparameters, feature sets, and pipeline settings are dynamically loaded from a centralized `config.yaml` to decouple logic from code.
+* **Defensive Validation:** Automated checks execute prior to processing to halt the pipeline if corrupted data (e.g., negative sales, missing keys) is detected.
+* **Signal Preservation:** Historical stockouts were not treated as zero-demand; instead, linear interpolation was used to impute missing sales, preserving the true demand baseline and seasonality.
+
+### 2. Segmented Forecasting Strategy
+Demand profiles dictate the modeling approach:
+* **Fast-Moving SKUs:** Forecasted using an explicit weighted ensemble combining **XGBoost** (capturing complex non-linear promotional and pricing effects) with **Exponential Smoothing** (extracting robust seasonality).
+* **Intermittent SKUs:** Forecasted using the **Syntetos-Boylan Approximation of Croston's Method** to prevent the zero-inflation bias commonly seen in slow-moving inventory.
+
+### 3. Rigorous Evaluation (Walk-Forward CV)
+* Standard cross-validation causes data leakage in time-series forecasting. This pipeline utilizes strict **Walk-Forward Cross-Validation** (3 expanding windows) to simulate real-world monthly retraining schedules and objectively measure performance.
+
+### 4. Mathematical Inventory Optimization
+* Point forecasts and their residual uncertainties are passed into a **Newsvendor Optimization Model**. 
+* The system calculates the Critical Ratio to balance holding costs against stockout penalties, producing dynamically optimized Safety Stock and Reorder Points (ROP) specific to lead times.
+
+### 5. MLOps & Deployment
+* **Model Versioning:** The pipeline utilizes Python `logging` and automatically serializes the highest-performing XGBoost artifacts (`.json`) to disk.
+* **Interactive UI:** The entire mathematical backend is wrapped in a deployed **Streamlit Dashboard** allowing stakeholders to filter recommendations by store, SKU, and operational constraints.
+
+---
+
+## 🏆 Key Business Results
+The system successfully surpassed the strict business performance thresholds:
+* **Target:** Mean Absolute Percentage Error (MAPE) < 20% for Fast-Moving Products.
+* **Achieved:** **12.1% MAPE** on the target segment.
+
+---
+
+## 📂 Repository Architecture
 ```text
-retail_forecasting_project/
-│
-├── data/                  # Generated synthetic datasets & final recommendations
-├── notebooks/             # Jupyter notebooks for EDA and model evaluation
-│   ├── 01_exploratory_data_analysis.ipynb
-│   └── 02_model_training_and_evaluation.ipynb
-├── src/                   # Modular Python source code
-│   ├── __init__.py
-│   ├── data_generation.py # Synthetic multi-relational data generator
-│   ├── features.py        # Feature engineering pipeline
-│   ├── models.py          # XGBoost and Baseline model classes
-│   └── optimization.py    # Newsvendor inventory optimization logic
-├── dashboard/             # Interactive web application
-│   └── app.py             # Streamlit dashboard script
-├── reports/               # Executive summaries and technical docs
-│   └── executive_summary.pdf
-├── requirements.txt       # Project dependencies
-├── submission.yml         # Automated execution commands
-└── README.md              # Project documentation
+├── config.yaml          # Centralized configuration (parameters, features, thresholds)
+├── data/                # Raw datasets and historical performance exports
+├── models/              # Saved MLOps artifacts (xgb_model_v1.json)
+├── notebooks/           # Interactive Jupyter notebooks for EDA and Walk-Forward CV
+├── reports/             # Technical Executive Summary PDF
+├── src/                 # Modularized, production-grade Python package
+│   ├── preprocessing.py # Data validation, ETL, and imputation logic
+│   ├── features.py      # Dynamic feature engineering (lags, rolling windows)
+│   ├── models.py        # Forecasting logic, Croston's, Ensembling, Versioning
+│   └── optimization.py  # Newsvendor Critical Ratio and Safety Stock math
+├── dashboard/           # Streamlit application
+│   └── app.py           # Stakeholder interface
+├── requirements.txt     # Python environment dependencies
+└── README.md            # Project documentation
 
 ```
 
----
+## ⚙️ How to Reproduce Locally
 
-## 🚀 How to Run the Pipeline
-
-### Prerequisites
-
-Ensure you have Python 3.9+ installed. It is highly recommended to use a virtual environment.
-
-### 1. Setup the Environment
-
-Install all required dependencies:
-
-```bash
-pip install -r requirements.txt
-
-```
-
-### 2. Generate the Dataset
-
-Create the synthetic retail data (sales, stores, products, promotions):
-
-```bash
-python src/data_generation.py
-
-```
-
-### 3. Run the Analytical Pipeline
-
-The core data science workflow is contained within the Jupyter notebooks. Execute them sequentially to perform EDA, feature engineering, model training, and optimization:
-
-1. Run `notebooks/01_exploratory_data_analysis.ipynb`
-2. Run `notebooks/02_model_training_and_evaluation.ipynb`
-
-*(Note: The second notebook will automatically generate the `final_inventory_recommendations.csv` required by the dashboard).*
-
-### 4. Launch the Dashboard
-
-Start the interactive Streamlit application to view the inventory recommendations:
-
-```bash
-streamlit run dashboard/app.py
-
-```
-
-The dashboard will be available in your browser at `http://localhost:8501`.
-
-```
-
----
-
-### The Final Stretch
-
-Once you have this README saved, your local project folder is absolutely flawless. 
-
-Looking at your submission screenshot, the final platform asks for:
-1. **A GitHub repository link** (You need to push this folder to GitHub).
-2. **A Live Demo URL** (You can deploy your Streamlit app for free using Streamlit Community Cloud).
-3. **A Video Demo URL** (A short screen recording of you explaining the code and clicking through the dashboard).
-
-Are you familiar with pushing code to GitHub and deploying a Streamlit app, or would you like me to walk you through those exact steps to finish your submission?
+1. Clone the repository to your local machine.`git clone https://github.com/surya-4409/retail-forecasting-optimization.git`
+2. Install the required dependencies: `pip install -r requirements.txt`
+3. To view the final output, launch the dashboard: `streamlit run dashboard/app.py`
 
 ```
