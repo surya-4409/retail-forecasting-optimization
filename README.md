@@ -1,26 +1,28 @@
 
 # 📦 Retail Demand Forecasting & Inventory Optimization Pipeline
 
-**Developer:** Surya (Roll No: 23MH1A4409) | **Role:** Data Scientist  
-**🎥 Video Walkthrough:** [INSERT YOUR YOUTUBE/DRIVE LINK HERE]  
-**🌐 Live Dashboard:** [INSERT YOUR STREAMLIT LINK HERE]  
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://retail-forecasting-optimization-b7et7qbwnypym9etluap82.streamlit.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/surya-4409/retail-forecasting-optimization.git)
+
+**🎥 Video Walkthrough:** [INSERT YOUR YOUTUBE/DRIVE VIDEO LINK HERE]  
+**🌐 Live Dashboard:** [View Deployed Application Here](https://retail-forecasting-optimization-b7et7qbwnypym9etluap82.streamlit.app/)  
 
 ---
 
-## 🎯 The Task: Project Overview
+## 🎯 Project Overview
 Retail margins are constantly eroded by two opposing inventory failures: **stockouts** (which cause immediate revenue loss and customer churn) and **overstocking** (which drives up holding costs and markdowns). 
 
 **The Objective:** Design and deploy an end-to-end, production-grade Machine Learning pipeline that predicts SKU-level demand and mathematically optimizes order quantities to minimize holding costs while strictly constraining stockout risk.
 
 ---
 
-## 🧠 Way of Execution: The Methodology
-To achieve a senior-level data science solution, this project was executed in five distinct phases, strictly adhering to MLOps and Software Engineering best practices:
+## 🧠 Methodology & MLOps Architecture
+To achieve a senior-level data science solution, this project was executed with strict adherence to MLOps and Software Engineering best practices:
 
 ### 1. Robust Data Engineering & Validation
 * **Configuration Management:** All hyperparameters, feature sets, and pipeline settings are dynamically loaded from a centralized `config.yaml` to decouple logic from code.
 * **Defensive Validation:** Automated checks execute prior to processing to halt the pipeline if corrupted data (e.g., negative sales, missing keys) is detected.
-* **Signal Preservation:** Historical stockouts were not treated as zero-demand; instead, linear interpolation was used to impute missing sales, preserving the true demand baseline and seasonality.
+* **Signal Preservation:** Historical stockouts were not treated as zero-demand. Linear interpolation was used to impute missing sales, preserving true demand baselines and seasonality.
 
 ### 2. Segmented Forecasting Strategy
 Demand profiles dictate the modeling approach:
@@ -36,7 +38,7 @@ Demand profiles dictate the modeling approach:
 
 ### 5. MLOps & Deployment
 * **Model Versioning:** The pipeline utilizes Python `logging` and automatically serializes the highest-performing XGBoost artifacts (`.json`) to disk.
-* **Interactive UI:** The entire mathematical backend is wrapped in a deployed **Streamlit Dashboard** allowing stakeholders to filter recommendations by store, SKU, and operational constraints.
+* **Containerization:** The entire application is containerized using Docker for flawless reproducibility across diverse computing environments.
 
 ---
 
@@ -50,6 +52,7 @@ The system successfully surpassed the strict business performance thresholds:
 ## 📂 Repository Architecture
 ```text
 ├── config.yaml          # Centralized configuration (parameters, features, thresholds)
+├── Dockerfile           # Containerization instructions for reproducibility
 ├── data/                # Raw datasets and historical performance exports
 ├── models/              # Saved MLOps artifacts (xgb_model_v1.json)
 ├── notebooks/           # Interactive Jupyter notebooks for EDA and Walk-Forward CV
@@ -66,10 +69,72 @@ The system successfully surpassed the strict business performance thresholds:
 
 ```
 
-## ⚙️ How to Reproduce Locally
+---
 
-1. Clone the repository to your local machine.`git clone https://github.com/surya-4409/retail-forecasting-optimization.git`
-2. Install the required dependencies: `pip install -r requirements.txt`
-3. To view the final output, launch the dashboard: `streamlit run dashboard/app.py`
+## ⚙️ How to Run Locally
+
+You can run this project using either a standard Python environment or Docker.
+
+### Option 1: Standard Python Setup
+
+1. **Clone the repository:**
+```bash
+git clone [https://github.com/surya-4409/retail-forecasting-optimization.git](https://github.com/surya-4409/retail-forecasting-optimization.git)
+cd retail-forecasting-optimization
 
 ```
+
+
+2. **Install dependencies:**
+*(It is recommended to use a virtual environment)*
+```bash
+pip install -r requirements.txt
+
+```
+
+
+3. **Launch the Dashboard:**
+```bash
+streamlit run dashboard/app.py
+
+```
+
+
+
+### Option 2: Run with Docker (Recommended for Reproducibility)
+
+1. **Clone the repository:**
+```bash
+git clone [https://github.com/surya-4409/retail-forecasting-optimization.git](https://github.com/surya-4409/retail-forecasting-optimization.git)
+cd retail-forecasting-optimization
+
+```
+
+
+2. **Build the Docker Image:**
+```bash
+docker build -t retail-forecast .
+
+```
+
+
+3. **Run the Container:**
+```bash
+docker run -p 8501:8501 retail-forecast
+
+```
+
+
+4. **View the App:** Open your web browser and navigate to `http://localhost:8501`.
+
+---
+
+## ✍️ Author
+
+**Surya (Billakurti Venkata Suryanarayana)** * **Roll No:** 23MH1A4409
+
+* **Role:** Data Scientist / Machine Learning Engineer
+* **College:** Aditya University
+
+```
+
