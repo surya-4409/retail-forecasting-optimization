@@ -4,7 +4,7 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://retail-forecasting-optimization-b7et7qbwnypym9etluap82.streamlit.app/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/surya-4409/retail-forecasting-optimization.git)
 
-**🎥 Video Walkthrough:** [INSERT YOUR YOUTUBE/DRIVE VIDEO LINK HERE]  
+**🎥 Video Walkthrough:** [[INSERT YOUR YOUTUBE/DRIVE VIDEO LINK HERE](https://drive.google.com/file/d/1gO-cSdOXt968wbr44ZVRMwQUzvyb39UA/view?usp=sharing)]  
 **🌐 Live Dashboard:** [View Deployed Application Here](https://retail-forecasting-optimization-b7et7qbwnypym9etluap82.streamlit.app/)  
 
 ---
