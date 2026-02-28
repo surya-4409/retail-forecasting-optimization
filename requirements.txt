@@ -3,7 +3,7 @@ numpy
 scikit-learn
 xgboost
 statsmodels
-streamlit
+streamlit>=1.32.0
 matplotlib
 seaborn
 pyyaml
